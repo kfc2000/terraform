@@ -11,37 +11,49 @@ namespace JavaObfuscate
 {
     class Program
     {
+        static void GenerateAST(string filePath)
+        {
+            Console.WriteLine("Generating AST for " + filePath + "...");
+            var ast = new Parser().Parse(filePath);
+            File.WriteAllText(filePath + ".ast.txt", ast.GenerateAST());
+        }
 
+
+        static void GenerateCSharpAST(string filePath)
+        {
+            Console.WriteLine("Generating C# AST for " + filePath + "...");
+            var ast = new Parser().Parse(filePath);
+            File.WriteAllText(filePath + ".ast.cs.txt", ast.GenerateCSharpAST());
+        }
+
+
+        static void GenerateDesugaredCode(string filePath)
+        {
+            Console.WriteLine("Desugaring " + filePath + "...");
+            var ast = new Parser().Parse(filePath);
+            var desugarer = new Desugarer();
+            var newast = desugarer.Desugar(ast);
+            File.WriteAllText(filePath + ".dsg.txt", newast.GenerateCode());
+        }
 
 
         static void Main(string[] args)
         {
-            var code = File.ReadAllText("TestFiles/MainActivity.java");
+            GenerateAST("TestFiles/JavaBasicForLoop.java");
+            GenerateAST("TestFiles/JavaWhileLoop.java");
+            GenerateAST("TestFiles/JavaDoWhileLoop.java");
+            GenerateAST("TestFiles/JavaWhileSwitchCase.java");
 
-            Console.WriteLine("Parsing...");
-            var stream = CharStreams.fromString(code);
-            var lexer = new Java8Lexer(stream);
-            var tokens = new CommonTokenStream(lexer);
-            var parser = new Java8Parser(tokens);
-            parser.BuildParseTree = true;
+            GenerateCSharpAST("TestFiles/JavaBasicForLoop.java");
+            GenerateCSharpAST("TestFiles/JavaWhileLoop.java");
+            GenerateCSharpAST("TestFiles/JavaDoWhileLoop.java");
+            GenerateCSharpAST("TestFiles/JavaWhileSwitchCase.java");
 
-            var cu = parser.compilationUnit();
-
+            GenerateDesugaredCode("TestFiles/TestDesugarBasicForLoop.java");
+            GenerateDesugaredCode("TestFiles/TestDesugarDoWhileLoop.java");
 
 
-            //Walk(cu, 0);
-            Console.WriteLine("Construct AST...");
-            var ast = JavaAST.ConstructAST(cu);
 
-            //Console.WriteLine(ast.GenerateTree());
-
-            Console.WriteLine("Desugaring...");
-            var desugarer = new Desugar();
-            var newast = desugarer.Run(ast);
-
-            Console.WriteLine("Output...");
-            Console.WriteLine(newast.GenerateCode());
-            
         }
     }
 }
